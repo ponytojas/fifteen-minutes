@@ -1,4 +1,5 @@
-const OVERPASS_API = "https://overpass-api.de/api/interpreter";
+const OVERPASS_DIRECT = "https://overpass-api.de/api/interpreter";
+const OVERPASS_CACHED = "https://15minutes.ponytojas.dev/api/overpass";
 
 export type OsmElement = {
   type: "node" | "way" | "relation";
@@ -40,21 +41,45 @@ out center body;
 `.trim();
 }
 
-export async function fetchOverpassData(
-  bounds: [number, number, number, number],
-): Promise<OsmElement[]> {
-  const query = buildOverpassQuery(bounds);
-
-  const res = await fetch(OVERPASS_API, {
+async function postOverpass(
+  endpoint: string,
+  query: string,
+): Promise<OverpassResponse> {
+  const res = await fetch(endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: `data=${encodeURIComponent(query)}`,
   });
 
   if (!res.ok) {
-    throw new Error(`Overpass API error: ${res.status} ${res.statusText}`);
+    // Try to surface useful error context
+    const text = await res.text().catch(() => "");
+    throw new Error(
+      `Overpass API error (${endpoint}): ${res.status} ${res.statusText}${text ? ` — ${text.slice(0, 300)}` : ""}`,
+    );
   }
 
-  const data = (await res.json()) as OverpassResponse;
+  return (await res.json()) as OverpassResponse;
+}
+
+export async function fetchOverpassData(
+  bounds: [number, number, number, number],
+): Promise<OsmElement[]> {
+  const query = buildOverpassQuery(bounds);
+
+  // 1) Try cached/proxied service first
+  try {
+    const data = await postOverpass(OVERPASS_CACHED, query);
+    return data.elements;
+  } catch (e) {
+    // Optional: log once, or attach to your telemetry
+    console.warn(
+      "[overpass] cached endpoint failed, falling back to direct",
+      e,
+    );
+  }
+
+  // 2) Fallback: direct Overpass
+  const data = await postOverpass(OVERPASS_DIRECT, query);
   return data.elements;
 }
