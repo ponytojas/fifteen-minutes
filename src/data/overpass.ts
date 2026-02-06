@@ -20,7 +20,7 @@ export function buildOverpassQuery(
   const bbox = `${minLat},${minLon},${maxLat},${maxLon}`;
 
   return `
-[out:json][timeout:120];
+[out:json][timeout:240];
 (
   node["shop"~"supermarket|grocery|convenience"](${bbox});
   node["leisure"="fitness_centre"](${bbox});
