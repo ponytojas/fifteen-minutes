@@ -22,7 +22,7 @@ An interactive web application that visualizes urban walkability and transit acc
 | Framework | React 19, TypeScript, Vite |
 | Map | Deck.GL, MapLibre GL, react-map-gl |
 | Spatial | H3-js (hexagons), KDBush + geokdbush (spatial index) |
-| State | Zustand (with localStorage persistence) |
+| State | Zustand (with IndexedDB persistence via idb-keyval) |
 | Styling | Tailwind CSS 4, Radix UI primitives, CVA |
 | Threading | Web Worker via Comlink |
 | Validation | Zod |

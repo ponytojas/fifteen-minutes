@@ -29,6 +29,7 @@
     "deck.gl": "^9.2.6",
     "geokdbush": "^2.0.1",
     "h3-js": "^4.4.0",
+    "idb-keyval": "^6.2.2",
     "kdbush": "^4.0.2",
     "lucide-react": "^0.563.0",
     "maplibre-gl": "^5.17.0",

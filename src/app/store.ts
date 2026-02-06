@@ -1,5 +1,10 @@
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
+import { createStore as createIdbStore, del, get, set as setValue } from "idb-keyval";
+import {
+  persist,
+  createJSONStorage,
+  type StateStorage,
+} from "zustand/middleware";
 import type {
   CityMeta,
   Config,
@@ -10,6 +15,36 @@ import type {
 } from "../types";
 import type { Locale } from "../i18n/types";
 import { defaultConfig } from "./config-defaults";
+
+const appIdbStore = createIdbStore("fifteen-minute-atlas", "zustand");
+
+const idbStorage: StateStorage = {
+  getItem: async (name) => {
+    const value = await get<string>(name, appIdbStore);
+    if (value !== undefined) {
+      return value;
+    }
+    if (typeof window === "undefined") {
+      return null;
+    }
+    try {
+      const legacyValue = window.localStorage.getItem(name);
+      if (legacyValue !== null) {
+        await setValue(name, legacyValue, appIdbStore);
+        window.localStorage.removeItem(name);
+      }
+      return legacyValue;
+    } catch {
+      return null;
+    }
+  },
+  setItem: async (name, value) => {
+    await setValue(name, value, appIdbStore);
+  },
+  removeItem: async (name) => {
+    await del(name, appIdbStore);
+  },
+};
 
 export type PersistedCityData = {
   city: CityMeta;
@@ -158,7 +193,7 @@ export const useStore = create<AppState & AppActions>()(
     }),
     {
       name: "fifteen-minute-atlas",
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => idbStorage),
       partialize: (state) => ({
         cityId: state.cityId,
         cityMeta: state.cityMeta,
