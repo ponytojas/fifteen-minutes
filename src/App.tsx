@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useRef } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import { DeckMap } from "./map/DeckMap";
 import { useStore } from "./app/store";
 import { useWorker } from "./worker/use-worker";
@@ -204,6 +205,9 @@ function App() {
 
       {/* Info Dialog */}
       <InfoDialog open={infoOpen} onOpenChange={setInfoOpen} />
+
+      {/* Vercel Web Analytics */}
+      <Analytics />
     </div>
   );
 }
